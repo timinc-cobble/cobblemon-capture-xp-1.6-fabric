@@ -10,7 +10,7 @@ import com.cobblemon.mod.common.pokemon.evolution.requirements.LevelRequirement
 import com.cobblemon.mod.common.util.isInBattle
 import net.fabricmc.api.ModInitializer
 import us.timinc.mc.cobblemon.capturexp.config.CaptureXPConfig
-import us.timinc.mc.config.ConfigBuilder
+import us.timinc.mc.cobblemon.capturexp.config.ConfigBuilder
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
