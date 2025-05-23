@@ -9,6 +9,7 @@ import com.cobblemon.mod.common.pokemon.OriginalTrainerType
 import com.cobblemon.mod.common.pokemon.evolution.requirements.LevelRequirement
 import com.cobblemon.mod.common.util.isInBattle
 import net.fabricmc.api.ModInitializer
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import us.timinc.mc.cobblemon.capturexp.config.CaptureXPConfig
 import us.timinc.mc.cobblemon.capturexp.config.ConfigBuilder
 import kotlin.math.pow
@@ -19,13 +20,17 @@ object CaptureXP : ModInitializer {
     const val MOD_ID = "capture_xp"
 
     @Suppress("MemberVisibilityCanBePrivate")
-    lateinit var captureXPConfig: CaptureXPConfig
+    lateinit var config: CaptureXPConfig
 
     override fun onInitialize() {
-        captureXPConfig = ConfigBuilder.load(CaptureXPConfig::class.java, MOD_ID);
+        config = ConfigBuilder.load(CaptureXPConfig::class.java, MOD_ID)
 
         CobblemonEvents.POKEMON_CAPTURED.subscribe { event ->
             if (event.player.isInBattle()) handleCaptureInBattle(event) else handleCaptureOutOfBattle(event)
+        }
+
+        ServerLifecycleEvents.END_DATA_PACK_RELOAD.register { _, _, _ ->
+            config = ConfigBuilder.load(CaptureXPConfig::class.java, MOD_ID)
         }
     }
 
@@ -43,10 +48,15 @@ object CaptureXP : ModInitializer {
                 val xpShareOnlyModifier =
                     (if (xpShareOnly) Cobblemon.config.experienceShareMultiplier else 1).toDouble()
                 val experience = Cobblemon.experienceCalculator.calculate(
-                    opponentMon, caughtBattleMon, captureXPConfig.multiplier * xpShareOnlyModifier
+                    opponentMon, caughtBattleMon, config.multiplier * xpShareOnlyModifier
                 )
                 if (experience > 0) {
                     opponentActor.awardExperience(opponentMon, experience)
+                }
+
+                if (config.grantEvs) {
+                    Cobblemon.evYieldCalculator.calculate(opponentMon, caughtBattleMon)
+                        .forEach(opponentMon.effectedPokemon.evs::add)
                 }
             }
         }
@@ -68,7 +78,7 @@ object CaptureXP : ModInitializer {
 
             val xpShareOnly = playerMon.uuid != first.uuid
             val xpShareModifier = Cobblemon.config.experienceShareMultiplier
-            val captureModifier = captureXPConfig.multiplier
+            val captureModifier = config.multiplier
             val term2 = (if (xpShareOnly) xpShareModifier else 1.0) * captureModifier
 
             val playerMonLevel = playerMon.level
@@ -95,6 +105,10 @@ object CaptureXP : ModInitializer {
                 (term4 * nonOtBonus * luckyEggBonus * closeToEvolutionBonus * affectionateBonus * cobblemonModifier).roundToInt()
 
             playerMon.addExperienceWithPlayer(event.player, source, experience)
+
+            if (config.grantEvs) {
+                opponentPokemon.form.evYield.forEach(playerMon.evs::add)
+            }
         }
     }
 }
