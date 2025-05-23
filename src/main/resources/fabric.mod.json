@@ -4,7 +4,9 @@
   "version": "1.6-fabric-1.0.0",
   "name": "Cobblemon Capture EXP",
   "description": "Grants EXP for your team when you capture a wild Pokemon",
-  "authors": ["TimInc aka Timothy Metcalfe"],
+  "authors": [
+    "TimInc aka Timothy Metcalfe"
+  ],
   "license": "MIT",
   "environment": "*",
   "entrypoints": {
