@@ -48,13 +48,13 @@ object CaptureXP : ModInitializer {
                 val xpShareOnlyModifier =
                     (if (xpShareOnly) Cobblemon.config.experienceShareMultiplier else 1).toDouble()
                 val experience = Cobblemon.experienceCalculator.calculate(
-                    opponentMon, caughtBattleMon, config.multiplier * xpShareOnlyModifier
+                    opponentMon, caughtBattleMon, config.inBattleExpMultiplier * xpShareOnlyModifier
                 )
                 if (experience > 0) {
                     opponentActor.awardExperience(opponentMon, experience)
                 }
 
-                if (config.grantEvs) {
+                if (config.inBattleGrantEvs) {
                     Cobblemon.evYieldCalculator.calculate(opponentMon, caughtBattleMon)
                         .forEach(opponentMon.effectedPokemon.evs::add)
                 }
@@ -78,8 +78,8 @@ object CaptureXP : ModInitializer {
 
             val xpShareOnly = playerMon.uuid != first.uuid
             val xpShareModifier = Cobblemon.config.experienceShareMultiplier
-            val captureModifier = config.multiplier
-            val term2 = (if (xpShareOnly) xpShareModifier else 1.0) * captureModifier
+            val captureModifier = config.outOfBattleExpMultiplier
+            val term2 = (if (xpShareOnly) xpShareModifier else 1.0)
 
             val playerMonLevel = playerMon.level
             val term3 = (((2.0 * opponentLevel) + 10) / (opponentLevel + playerMonLevel + 10)).pow(2.5)
@@ -102,11 +102,11 @@ object CaptureXP : ModInitializer {
             val cobblemonModifier = Cobblemon.config.experienceMultiplier
 
             val experience =
-                (term4 * nonOtBonus * luckyEggBonus * closeToEvolutionBonus * affectionateBonus * cobblemonModifier).roundToInt()
+                (term4 * nonOtBonus * luckyEggBonus * closeToEvolutionBonus * affectionateBonus * cobblemonModifier * captureModifier).roundToInt()
 
             playerMon.addExperienceWithPlayer(event.player, source, experience)
 
-            if (config.grantEvs) {
+            if (config.outOfBattleGrantEvs) {
                 opponentPokemon.form.evYield.forEach(playerMon.evs::add)
             }
         }
